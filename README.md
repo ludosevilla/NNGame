@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/ludosevilla/NNGame/main/nngame.jpg" alt="NNGAME" width="600">
+
 # NNGAME
 
 I'd like to introduce this little game: **NNGAME**!
