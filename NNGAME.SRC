@@ -202,6 +202,7 @@ void initPlayer(){
 	pac.lastDirection=1;
 }
 
+	
 //Fonctions "balles"
 
 void initBullets() {
@@ -250,6 +251,10 @@ void fireBullet() {
 				bullets[i].speedY=-speed+varY;
 				bullets[i].speedX=speed+varX;
 			}
+			
+			//bullets[i].X=pac.X;
+			//bullets[i].Y=pac.Y;
+			
 			int a;
 			a=pac.X;
 			bullets[i].X=a;
@@ -260,8 +265,6 @@ void fireBullet() {
 			soundFire(0);
 			return;
 		}
-		
-		
 	}
 }
 
@@ -319,7 +322,7 @@ void enableWolves(){
 		}
 	}
 	if (numWolves<currWolves) {
-		if (rnd(0,100)==5) {
+		if (rnd(0,50)==5) {
 			for(byte i;i<currWolves;i++){
 				if (!wolves[i].enabled) {
 					wolves[i].enabled=true;
@@ -341,14 +344,7 @@ void enableWolves(){
 			}
 		}
 	}
-	//for(byte i;i<currWolves;i++){
-	//	if (wolves[i].enabled) {
-	//		curPos(0,i+10);
-	//		wolves[i].X=wolves[i].X+wolves[i].speed;
-	//		sprPos(wolves[i].sprId,(nat)wolves[i].X/10,(nat)wolves[i].Y/10);
-	//		curPos(0,i+14);
-	//	}
-	//}		
+	
 }
 					
 
@@ -430,11 +426,25 @@ void clearSprites() {
 		sprPrio(i,0);
 	}
 }
+
 		
-void displayScore() {
+void displayScore(bool init) {
 	nat div = 10000;
 
 	byte index;
+	
+	if (init) {
+		curPos(0,0);
+		print("2¬­");
+		curPos(0,1);
+		print("2€");
+		curPos(79,1);
+		print("2€");
+		curPos(0,2);
+		print("2«ª");
+	}
+
+	
 	curPos(1,1);
 	print("2SCORE d");
 	
@@ -503,6 +513,7 @@ void showIntro(){
 	import("res/intro.tls",cpuWindow,23168,tilPage);
 	import("res/intro.pla",tilPal,48);
 		
+	
 	
 	byte X=5;
 	byte Y=15;
@@ -595,7 +606,8 @@ byte game() {
 	initWolves();
 	initGhost();	
 	displayDiam();
-
+	displayScore(true);
+	
 	coffreY=12;
 	coffreX=rnd(0,22);
 	touch=false;
@@ -615,7 +627,7 @@ byte game() {
 	sprUpdt();
 
 	while(_keyDwn!=12) {
-		displayScore();
+		//displayScore(false);
 		enableWolves();
 		animSpr();
 		moveDiam();
@@ -623,7 +635,7 @@ byte game() {
 		moveGhost();
 		if (startTime<_time && currWolves<maxWolves) {
 			currWolves++;
-			startTime=_time +20;
+			startTime=_time +30;
 		}
 		
 		byte dir=0;
@@ -653,7 +665,7 @@ byte game() {
 				
 		if (!diam.catched && isSprSpr(diam.sprId,pac.sprId)) {
 			score+=200;
-			displayScore();
+			displayScore(false);
 			displayDiam();
 			soundCatch(0);
 			diam.catched=true;
@@ -665,6 +677,7 @@ byte game() {
 			if (score>10)
 				score-=10;
 			else score=0;
+			displayScore(false);
 		}
 		
 		//Collision coffre-joueur ?
@@ -676,7 +689,7 @@ byte game() {
 				goPoints(500,pac.X,pac.Y);
 				nrj+=50;
 				if (nrj>500) nrj=500;
-				displayScore();
+				displayScore(false);
 				displayDiam();
 			}
 		} else touch=false; 
@@ -687,6 +700,7 @@ byte game() {
 				//Collision Loup-joueur?
 				if (isSprSpr(pac.sprId,wolves[i].sprId)) {
 					life--;
+					displayScore(false);
 					if (life==0)
 						break;
 					wolves[i].speed =-wolves[i].speed;
@@ -718,7 +732,7 @@ byte game() {
 								sprFlip(wolves[i].sprId,true,true);
 							}
 							resetBullet(j);
-							displayScore();
+							displayScore(false);
 						}
 					}
 				}
@@ -753,7 +767,7 @@ byte game() {
 import("/system/reginit.dat",0x1100,0);
 synInit(0);
 synInit(1);
-//poke(setSprPg,sprPage);// Pour etre sur...
+rndSeed(_time);
 
 clearSprites();
 
@@ -767,26 +781,28 @@ poke(0x2f14,0);
 poke(0x2f15,0);
 poke(0x2f0b,peek(0x2f0b)&0b01111111);// Eteint souris
 
-
 import("res/backg.bmp",0x3000,48000,bmpPage);
 import("res/backg.pal",0x11a0,48);
 poke(gfxModes,peek(gfxModes)|0b00001001);
 
-showIntro();
-
 import("res/pac.spr",cpuWindow,5120,sprPage);
 import("res/pac.pla",sprPlaA,48);
+
+showIntro();
+
 import("res/coffre.tls",cpuWindow,1280,tilPage);
 import("res/coffre.pla",tilPal,48);
 
-
 while(game()){}
 
-poke(gfxModes,0b00010000);
+memSet(0x3000,48000,0,bmpPage);// Efface bitmap
+
+import("/system/reginit.dat",0x1100,0);
+
 poke(0x2f13,oldR);
 poke(0x2f14,oldG);
 poke(0x2f15,oldB);
-poke(0x2f0b,peek(0x2f0b)|128); //Reactive souris
+
 memSet(0x1200,3200,32);//clear screen
 memSet(0x1e80,3200,1);//clear screen
 clearSprites();
