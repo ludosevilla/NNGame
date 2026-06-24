@@ -1,4 +1,4 @@
-<table>
+<table border="0">
 <tr>
 <td width="420" valign="top">
 
@@ -16,6 +16,7 @@ At first, it was simply meant to be a series of experiments to explore the capab
 And then, one thing led to another... and I ended up making a game!
 
 The gameplay is what it is, considering that I'm not a game developer at all (and not really a gamer either—I basically stopped at Galaga, Pac-Man, and Pooyan...). As a result, I probably don't follow the usual game development rules or best practices, so please be forgiving!
+</td></tr><tr><td colspan="2">
 
 In NNGAME, you control the famous yellow character everyone knows, and your goal is to achieve the highest score possible.
 
