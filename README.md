@@ -1,6 +1,13 @@
-<img src="https://raw.githubusercontent.com/ludosevilla/NNGame/main/nngame.jpg" alt="NNGAME" width="600">
+<table>
+<tr>
+<td width="420" valign="top">
 
-# NNGAME
+<img src="https://raw.githubusercontent.com/ludosevilla/NNGame/main/nngame-cover2.png" alt="NNGAME" width="400">
+
+</td>
+<td valign="top">
+
+  # NNGAME
 
 I'd like to introduce this little game: **NNGAME**!
 
@@ -43,3 +50,7 @@ LOFI (the programming language) is clearly much faster than the BASIC interprete
 A big congratulations to Franck Sauer for creating the Micro-8 and for all the impressive work behind it.
 
 Micro-8 computer : https://francksauer.com/index.php/micro-8
+
+<img src="https://raw.githubusercontent.com/ludosevilla/NNGame/main/nngame.jpg" alt="NNGAME" width="600">
+
+</td></td></table>
