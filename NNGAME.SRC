@@ -1,5 +1,4 @@
-// NNGAME
-// Game for Micro-8 computer
+/// Game for Micro-8 computer
 // Jean-arthur Silve 2026
 // License GNU GPL3
 // github.com/ludosevilla
@@ -781,7 +780,7 @@ byte game() {
 			curPos(27,16);
 			print("9b™•••••••••••••••••••••••˜");
 			curPos(21,19);
-			print("bPRESS ANY 	EY OR FIRE(A) TO PLAY AGAIN");
+			print("bPRESS ANY KEY OR FIRE(A) TO PLAY AGAIN");
 			curPos(33,20);
 			print("bOR ESC TO QUIT");
 			clkSet();
