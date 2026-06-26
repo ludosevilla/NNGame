@@ -1,19 +1,26 @@
-/// NNGAME
-// Jeu pour Micro-8
+// NNGAME
+// Game for Micro-8 computer
 // Jean-arthur Silve 2026
+// License GNU GPL3
 // github.com/ludosevilla
 
 
-nat gfxModes=0x2f00; // Couches graphique
-nat sprPlaA=0x11d0; // Premiere palette
+nat gfxModes=0x2f00; // Graphics layers
+nat sprPlaA=0x11d0; // First sprite palette
 nat tilPal=0x1170;
 byte sprPage=0x20; // Page def des sprites (defaut)
 byte bmpPage=0x60;// Page bitmap
 byte tilPage=0x00;// Page tiles
-nat setSprPg=0x2f04; //Registre config page sprites
-nat cpuWindow=0x3000; // Debut xsram
+nat setSprPg=0x2f04; // Sprite config register
+nat cpuWindow=0x3000; // Start xsram
 
 // Types
+
+type rasterInstr {
+	byte opcode;
+	nat word;
+	byte val;
+};
 
 type diamSpr {
 	byte sprId;
@@ -71,10 +78,10 @@ type pointsSpr {
 
 byte maxBullets=10;
 byte maxWolves = 10;
-byte currWolves;//Nbr de loups actuel
+byte currWolves;//Current muber of wolves
 
-byte sprIdBullet=15;//Identifiant premiere balle 
-byte sprIdWolf=2;//identifiant du premier loup
+byte sprIdBullet=15;//Sprite id first bullet 
+byte sprIdWolf=2;//Sprite id first wolf
 
 playerSpr pac;
 diamSpr diam;	
@@ -98,19 +105,22 @@ int coffreY2;
 int coffreX2;
 bool touch;
 
+byte tickCnt;
+nat tick;
 nat sndPacTimer=0;
 
 
 text char={1};
+rasterInstr rasterLst[1]= {{4,&tickCnt,1}};
 
-//fonctions sonores
+// Sound functions
 
 void soundFire(byte voice){
 	
 	synNoteOff(voice);
 	synVoice(voice,2,5,0b11,15); //id,wform,octave,pan,volume
 	synEnv(voice,0,10,0,0);//id,attack,delay,sustain,release
-	synNoteOn(voice,48,120);//voi
+	synNoteOn(voice,48,120);//voice, note, velocity
 }
 
 void soundBounce(byte voice){
@@ -118,17 +128,17 @@ void soundBounce(byte voice){
 	synNoteOff(voice);
 	synVoice(voice,0,7,0b11,15); //id,wform,octave,pan,volume
 	synEnv(voice,0,10,0,0);//id,attack,delay,sustain,release
-	synNoteOn(voice,1,120);//voi
+	synNoteOn(voice,1,120);//voice, note, velocity
 }
 
 void soundRun(byte voice){
-	if (sndPacTimer==0) {
-		sndPacTimer=5;
+	if (sndPacTimer+10<tick) {
+		sndPacTimer=tick;
 		synNoteOff(voice);
 		synVoice(voice,0,1,0b11,15); //id,wform,octave,pan,volume
 		synEnv(voice,2,2,0,10);//id,attack,delay,sustain,release
 		synNoteOn(voice,100,120);//voice, note, velocity
-	} else sndPacTimer--;		
+	}		
 }
 
 void soundCatch(byte voice){
@@ -147,7 +157,7 @@ void soundRelease(byte voice){
 	synNoteOn(voice,80,120);//voice, note, velocity
 }	
 	
-// Fonctions "Ghost"
+// "Ghost" functions
 int _ghostCalcY(int x,int a) {
 	real cycles;
 	real angle;
@@ -192,7 +202,7 @@ void moveGhost(){
 }
 
 	
-//Fonctions "Joueur"
+// "Player" functions
 
 void initPlayer(){
 	pac.sprId=1;
@@ -203,7 +213,7 @@ void initPlayer(){
 }
 
 	
-//Fonctions "balles"
+// "Bullets" functions
 
 void initBullets() {
 	for(byte i;i<maxBullets;i++){
@@ -291,7 +301,7 @@ void moveBullet(){
 }
 
 
-//Fonctions "loups"
+// "Wolves" functions
 	
 void initWolves(){
 	for(byte i;i<maxWolves;i++){
@@ -307,7 +317,7 @@ void initWolves(){
 void enableWolves(){
 	byte numWolves;
 	for(byte i;i<currWolves;i++){
-		//on desactive ceux qui ont fini leur course
+		//we deactivate those who have ended their path
 		if (wolves[i].enabled) {
 			if ((wolves[i].speed>0 && wolves[i].X>8230) || (wolves[i].speed<0 && wolves[i].X<420)) {
 				wolves[i].enabled=false;
@@ -348,7 +358,7 @@ void enableWolves(){
 }
 					
 
-//Fonctions "diamants"
+// "Diamond" functions
 
 void initDiam(){
 		diam.sprId=0;
@@ -369,6 +379,7 @@ void displayDiam() {
 	diam.speedY= rnd(-30,30);
 	if(diam.speedY==0) diam.speedY=1;
 	diam.catched=false;
+	led(255,255,255);
 }
 
 void moveDiam() {
@@ -396,7 +407,7 @@ void moveDiam() {
 }
 
 
-//Fonctions "points"
+// "Points" function
 void goPoints(nat pt,int X,int Y){
 	for(byte i;i<3;i++){
 		if(points[i].points==pt) {
@@ -417,7 +428,21 @@ void movePoints(){
 
 
 
-//fonctions diverses
+// Misc functions
+
+void updTick() {
+	rstrCmp(480,&rasterLst);
+	if (tickCnt==0) return;
+	rstrInt(false);
+	tick+=tickCnt;
+	tickCnt=0;
+	rstrInt(true);
+}
+
+void sleep(nat msec) {
+	clkSet();
+	while(_mSec<msec){}
+}
 
 void clearSprites() {
 	for (byte i=0;i<32;i++) {
@@ -531,14 +556,14 @@ void showIntro(){
 			offs=0;
 			
 			if (prepareBuffAddr == 0x2b00) {
-				//on a prepare  A-> buff B vers A
+				// "A" buffer has been prepared : we display it 
 				poke(0x2f0b,peek(0x2f0b) & 0b11111011);
 				poke(0x2f02,(byte)offs);
 				prepareBuffAddr = 0x2d00;				
 				Y--;
 				_introDraw(X,Y,prepareBuffAddr);
 			} else {
-				//on a prepare  B-> buff A vers B
+				// "B" buffer has been prepared : we display it 
 				poke(0x2f0b,peek(0x2f0b) | 0b00000100);
 				poke(0x2f02,(byte)offs);
 				prepareBuffAddr = 0x2b00;
@@ -567,6 +592,7 @@ void showIntro(){
 	memSet(0x2b00,512,0);//clear tiles (buffer A)
 	memSet(0x2d00,512,0);//clear tiles (buffer B)
 	poke(0x2f0b,peek(0x2f0b) & 0b11111011); //affichqge buffer A(defaut)
+	sleep(300);
 }
 
 byte game() {
@@ -581,6 +607,9 @@ byte game() {
 	currWolves=4;
 	startTime=_time;
 
+
+	rstrInt(true);
+	rstrCmp(480,&rasterLst);
 
 	initPlayer();
 	initDiam();
@@ -612,13 +641,13 @@ byte game() {
 	coffreX=rnd(0,22);
 	touch=false;
 	
-	//Affichage du coffre
+	// Display the treasure chest
 	for (byte i=0;i<9;i++) {
 		poke(0x2b00+(32*((byte)coffreY+(i/3)))+(byte)coffreX+(i%3),i+1);
 	}
 
 
-	// Coordonnees de la zone du coffre
+	// Treasure chest coordinates
 	coffreX1 = (16*coffreX)*2;
 	coffreY1 = (16*coffreY)*2;
 	coffreX2 = (16*(coffreX+3))*2;
@@ -627,7 +656,8 @@ byte game() {
 	sprUpdt();
 
 	while(_keyDwn!=12) {
-		//displayScore(false);
+		
+		updTick();
 		enableWolves();
 		animSpr();
 		moveDiam();
@@ -651,8 +681,8 @@ byte game() {
 	
 		sprPos(pac.sprId,pac.X,pac.Y);
 		
-		//on garde la derniere direction
-		//pour le sens de tir
+		// We keep the last direction of the player
+		// for shoot direction
 		if (dir) {
 			soundRun(1); 
 			pac.lastDirection=dir;
@@ -661,7 +691,7 @@ byte game() {
 			fireBullet();
 		}
 		
-		//Collision joueur-diamant ?
+		// Player-diamond collision?
 				
 		if (!diam.catched && isSprSpr(diam.sprId,pac.sprId)) {
 			score+=200;
@@ -669,10 +699,11 @@ byte game() {
 			displayDiam();
 			soundCatch(0);
 			diam.catched=true;
+			led(255,0,0);
 			goPoints(200,pac.X,pac.Y);
 		}
 		
-		//Collision fantome-joueur ? 
+		// Ghost-player collision?
 		if (isSprSpr(inky.sprId,pac.sprId)) {
 			if (score>10)
 				score-=10;
@@ -680,7 +711,8 @@ byte game() {
 			displayScore(false);
 		}
 		
-		//Collision coffre-joueur ?
+		
+		// Treasure chest-player collision?
 		if (isSprBox(pac.sprId,coffreX1,coffreY1,coffreX2,coffreY2)) {
 			if (!touch && diam.catched) {
 				soundRelease(0);
@@ -697,7 +729,7 @@ byte game() {
 		
 		for(byte i;i<maxWolves;i++) {
 			if (wolves[i].enabled && wolves[i].speed<100 && wolves[i].speed>-100) {
-				//Collision Loup-joueur?
+				// Wolf-player collision?
 				if (isSprSpr(pac.sprId,wolves[i].sprId)) {
 					life--;
 					displayScore(false);
@@ -714,11 +746,11 @@ byte game() {
 						displayDiam();
 					}
 				}
-				//Collision loup-diamant?
+				// Wolf-diamond collision?
 				if (!diam.catched && isSprSpr(diam.sprId,wolves[i].sprId)) {
 					displayDiam();
 				}
-				//collision loup-balle?
+				// Wolf-bullet collision?
 				for(byte j;j<maxBullets;j++){
 					if(bullets[j].X>0){
 						if (isSprSpr(bullets[j].sprId,wolves[i].sprId)) {
@@ -749,15 +781,21 @@ byte game() {
 			curPos(27,16);
 			print("9b™•••••••••••••••••••••••˜");
 			curPos(21,19);
-			print("bPRESS ANY KEY OR FIRE(A) TO PLAY AGAIN");
+			print("bPRESS ANY 	EY OR FIRE(A) TO PLAY AGAIN");
 			curPos(33,20);
 			print("bOR ESC TO QUIT");
 			clkSet();
 			
-			while(_mSec<1000){}
 			
-			while(_keyDwn==0 && (_padLft & 0b00000001)==0){}
-			return 1;
+			sleep(300);
+			while(true) {
+				if (_keyDwn==12)
+					return 0;
+				if ((_padLft & 0b00000001)>0) {
+					sleep(300);
+					return 1;
+				}
+			}
 		}
 	}
 	return 0;
@@ -771,15 +809,15 @@ rndSeed(_time);
 
 clearSprites();
 
-poke(gfxModes,0b00010100); // Uniquement les sprites,texte
-// Sauvegarde fond et fond noir
+poke(gfxModes,0b00010100); // Sprite & text only
+// Bgcolor save
 byte oldR=peek(0x2f13);
 byte oldG=peek(0x2f14);
 byte oldB=peek(0x2f15);
 poke(0x2f13,0);
 poke(0x2f14,0);
 poke(0x2f15,0);
-poke(0x2f0b,peek(0x2f0b)&0b01111111);// Eteint souris
+poke(0x2f0b,peek(0x2f0b)&0b01111111);// No mouse
 
 import("res/backg.bmp",0x3000,48000,bmpPage);
 import("res/backg.pal",0x11a0,48);
@@ -795,10 +833,13 @@ import("res/coffre.pla",tilPal,48);
 
 while(game()){}
 
-memSet(0x3000,48000,0,bmpPage);// Efface bitmap
+// Exiting
+
+memSet(0x3000,48000,0,bmpPage);// Clear bitmap
 
 import("/system/reginit.dat",0x1100,0);
 
+// Restore bgcolor
 poke(0x2f13,oldR);
 poke(0x2f14,oldG);
 poke(0x2f15,oldB);
@@ -806,3 +847,7 @@ poke(0x2f15,oldB);
 memSet(0x1200,3200,32);//clear screen
 memSet(0x1e80,3200,1);//clear screen
 clearSprites();
+rstrInt(false);
+
+print("d                  e6e7e8e9eaebec93eeef");
+print("1Thanks for using  df6f7f8f9fafbfcfdfeff 1computer!");
