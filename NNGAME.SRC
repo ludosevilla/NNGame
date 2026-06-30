@@ -15,11 +15,6 @@ nat cpuWindow=0x3000; // Start xsram
 
 // Types
 
-type rasterInstr {
-	byte opcode;
-	nat word;
-	byte val;
-};
 
 type diamSpr {
 	byte sprId;
@@ -110,7 +105,6 @@ nat sndPacTimer=0;
 
 
 text char={1};
-rasterInstr rasterLst[1]= {{4,&tickCnt,1}};
 
 // Sound functions
 
@@ -261,15 +255,9 @@ void fireBullet() {
 				bullets[i].speedX=speed+varX;
 			}
 			
-			//bullets[i].X=pac.X;
-			//bullets[i].Y=pac.Y;
-			
-			int a;
-			a=pac.X;
-			bullets[i].X=a;
-			a=pac.Y;
-			bullets[i].Y=a;
-			
+			bullets[i].X=pac.X;
+			bullets[i].Y=pac.Y;
+						
 			nrj--;
 			soundFire(0);
 			return;
@@ -429,14 +417,6 @@ void movePoints(){
 
 // Misc functions
 
-void updTick() {
-	rstrCmp(480,&rasterLst);
-	if (tickCnt==0) return;
-	rstrInt(false);
-	tick+=tickCnt;
-	tickCnt=0;
-	rstrInt(true);
-}
 
 void sleep(nat msec) {
 	clkSet();
@@ -607,9 +587,6 @@ byte game() {
 	startTime=_time;
 
 
-	rstrInt(true);
-	rstrCmp(480,&rasterLst);
-
 	initPlayer();
 	initDiam();
 	
@@ -656,7 +633,6 @@ byte game() {
 
 	while(_keyDwn!=12) {
 		
-		updTick();
 		enableWolves();
 		animSpr();
 		moveDiam();
@@ -772,6 +748,7 @@ byte game() {
 	
 		vSync();
 		sprUpdt();	
+		tick++;
 		if (life==0 || nrj==0) {
 			curPos(27,14);
 			print("9b–“““““““““““““““““““““““—");
@@ -846,7 +823,6 @@ poke(0x2f15,oldB);
 memSet(0x1200,3200,32);//clear screen
 memSet(0x1e80,3200,1);//clear screen
 clearSprites();
-rstrInt(false);
 
 print("d                  e6e7e8e9eaebec93eeef");
 print("1Thanks for using  df6f7f8f9fafbfcfdfeff 1computer!");
