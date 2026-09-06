@@ -56,7 +56,7 @@ Micro-8 computer : https://francksauer.com/index.php/micro-8
 
 Here’s a little video for those unlucky folks who don’t have a Micro-8 yet!
 
-[See video](https://youtu.be/uNkIsexGKeI)
+<a href="https://youtu.be/uNkIsexGKeI" target="_blank" rel="noopener noreferrer">See video</a>
 
 
 
