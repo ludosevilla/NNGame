@@ -55,7 +55,7 @@ Micro-8 computer : https://francksauer.com/index.php/micro-8
 <img src="https://raw.githubusercontent.com/ludosevilla/NNGame/main/nngame.jpg" alt="NNGAME" width="600">
 
 Here’s a little video for those unlucky folks who don’t have a Micro-8 yet!
-https://youtu.be/uNkIsexGKeI
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uNkIsexGKeI?si=tye72Xj-gCbUzM6z" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 
 </td></td></table>
